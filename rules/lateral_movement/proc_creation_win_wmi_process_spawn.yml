@@ -1,0 +1,37 @@
+title: WMI Provider Spawning Command Interpreter (Lateral Movement)
+id: b6e2c743-9a15-4d80-8c31-5e0f2a7b1d99
+status: experimental
+description: |
+  Detects WmiPrvSE.exe spawning a command interpreter or scripting/proxy binary.
+  Remote WMI execution (wmic /node, Invoke-WmiMethod, Win32_Process.Create) surfaces
+  on the target as WmiPrvSE.exe as the parent of the attacker's command, making this
+  a high-fidelity indicator of WMI-based lateral movement.
+references:
+  - https://attack.mitre.org/techniques/T1047/
+  - https://attack.mitre.org/techniques/T1021/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.execution
+  - attack.lateral_movement
+  - attack.t1047
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection:
+    ParentImage|endswith: '\WmiPrvSE.exe'
+    Image|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\pwsh.exe'
+      - '\cscript.exe'
+      - '\wscript.exe'
+      - '\mshta.exe'
+      - '\rundll32.exe'
+      - '\regsvr32.exe'
+  condition: selection
+falsepositives:
+  - Some legitimate management, inventory and monitoring platforms invoke commands
+    over WMI. Baseline the parent-child pairs that are normal for your estate.
+level: high
