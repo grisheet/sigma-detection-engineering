@@ -1,0 +1,45 @@
+title: Suspicious LSASS Memory Access (Credential Dumping)
+id: 7f1c62a9-8d34-4b5e-a0c1-2e9f7d3b4c88
+status: experimental
+description: |
+  Detects a process opening a handle to lsass.exe with access rights sufficient to
+  read process memory (PROCESS_VM_READ | PROCESS_QUERY_INFORMATION). This is the
+  behavioural signature behind Mimikatz sekurlsa, comsvcs.dll MiniDump, procdump and
+  most credential-theft tooling, independent of the tool name. Relies on Sysmon
+  Event ID 10 (ProcessAccess).
+references:
+  - https://attack.mitre.org/techniques/T1003/001/
+  - https://www.microsoft.com/en-us/security/blog/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.credential_access
+  - attack.t1003.001
+logsource:
+  category: process_access
+  product: windows
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess:
+      - '0x1410'
+      - '0x1010'
+      - '0x1438'
+      - '0x143a'
+      - '0x1418'
+      - '0x1f0fff'
+      - '0x1f1fff'
+      - '0x1f2fff'
+  filter_known_good:
+    SourceImage|endswith:
+      - '\wmiprvse.exe'
+      - '\taskmgr.exe'
+      - '\MsMpEng.exe'
+      - '\svchost.exe'
+      - '\csrss.exe'
+      - '\wininit.exe'
+  condition: selection and not filter_known_good
+falsepositives:
+  - EDR/AV agents and monitoring tools read LSASS legitimately. Tune the known-good
+    filter to signed security products in your environment.
+level: high
