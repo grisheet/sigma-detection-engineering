@@ -1,0 +1,36 @@
+title: Suspicious PowerShell Encoded Command Execution
+id: 5b2c1e4a-7d3f-4a91-9c22-1f0e8d6a4b10
+status: experimental
+description: |
+  Detects PowerShell being launched with an encoded command flag (-EncodedCommand /
+  -enc / -e). Base64-encoded commands are heavily used by adversaries to hide the
+  actual payload from casual log inspection and simple string-matching defenses.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1027/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.defense_evasion
+  - attack.t1027
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_img:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_enc:
+    CommandLine|contains:
+      - ' -enc '
+      - ' -encodedcommand '
+      - ' -ec '
+      - ' -e '
+  condition: selection_img and selection_enc
+falsepositives:
+  - Endpoint management suites (SCCM, Intune), some installers and backup agents
+    legitimately pass encoded commands. Baseline expected encoders per host.
+level: medium
