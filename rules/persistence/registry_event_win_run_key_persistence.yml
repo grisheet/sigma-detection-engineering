@@ -1,0 +1,42 @@
+title: Suspicious Run Key Registry Persistence
+id: d3a1e4b5-2c6f-4e91-8b30-1a2e7c9d0f45
+status: experimental
+description: |
+  Detects the creation or modification of Run/RunOnce registry keys commonly used
+  by malware and adversaries to maintain persistence across reboots. These registry
+  locations execute arbitrary programs during user logon or system startup, making
+  them one of the most frequently abused persistence mechanisms.
+references:
+  - https://attack.mitre.org/techniques/T1547/001/
+  - https://docs.microsoft.com/en-us/windows/win32/setupapi/run-and-runonce-registry-keys
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.persistence
+  - attack.t1547.001
+logsource:
+  category: registry_event
+  product: windows
+detection:
+  selection:
+    EventType:
+      - SetValue
+      - CreateKey
+    TargetObject|contains:
+      - '\Software\Microsoft\Windows\CurrentVersion\Run\'
+      - '\Software\Microsoft\Windows\CurrentVersion\RunOnce\'
+      - '\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Run\'
+      - '\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\RunOnce\'
+      - '\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Userinit'
+      - '\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Shell'
+  filter_known_good:
+    Image|endswith:
+      - '\msiexec.exe'
+      - '\setup.exe'
+      - '\install.exe'
+      - '\Update.exe'
+  condition: selection and not filter_known_good
+falsepositives:
+  - Legitimate software installation may write Run keys. Baseline expected
+    installers and management tools in your environment.
+level: medium
