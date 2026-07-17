@@ -1,0 +1,34 @@
+title: PsExec Service Installation (Lateral Movement)
+id: a3d5e91b-4c72-4a68-b9d0-7f2c1e6a8b40
+status: experimental
+description: |
+  Detects installation of the PSEXESVC service that Sysinternals PsExec (and many
+  clones) drops on the remote/target host to obtain code execution. Fires on Windows
+  Service Control Manager Event ID 7045 (a service was installed on the system).
+references:
+  - https://attack.mitre.org/techniques/T1021/002/
+  - https://attack.mitre.org/techniques/T1569/002/
+  - https://attack.mitre.org/software/S0029/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.lateral_movement
+  - attack.execution
+  - attack.t1021.002
+  - attack.t1569.002
+  - attack.s0029
+logsource:
+  product: windows
+  service: system
+detection:
+  selection_name:
+    EventID: 7045
+    ServiceName: 'PSEXESVC'
+  selection_path:
+    EventID: 7045
+    ImagePath|contains: 'PSEXESVC'
+  condition: selection_name or selection_path
+falsepositives:
+  - Sanctioned administrative use of PsExec for remote management. Restrict to
+    unexpected source hosts and off-baseline admin accounts.
+level: high
