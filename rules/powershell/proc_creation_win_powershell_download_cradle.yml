@@ -1,0 +1,41 @@
+title: PowerShell Download Cradle
+id: 8a1d9f62-2c47-4e0b-b3a6-9d7e5c1a2f34
+status: experimental
+description: |
+  Detects PowerShell download cradles that pull a remote payload
+  directly into memory or disk using common .NET and cmdlet download primitives.
+  This is a hallmark of fileless malware staging and post-exploitation frameworks.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1105/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.command_and_control
+  - attack.t1105
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_img:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_download:
+    CommandLine|contains:
+      - 'Net.WebClient'
+      - '.DownloadString('
+      - '.DownloadFile('
+      - '.DownloadData('
+      - 'Invoke-WebRequest'
+      - 'Invoke-RestMethod'
+      - 'Start-BitsTransfer'
+      - 'iwr '
+      - 'wget '
+      - 'curl '
+  condition: selection_img and selection_download
+falsepositives:
+  - Legitimate automation and package-install scripts that fetch content over HTTP.
+level: medium
