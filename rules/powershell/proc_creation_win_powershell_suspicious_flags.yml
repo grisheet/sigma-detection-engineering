@@ -1,0 +1,38 @@
+title: Suspicious PowerShell Execution Flag Combination
+id: c4f7a018-5e2b-49d3-8a71-6b0c3d9e1a55
+status: experimental
+description: |
+  Detects the combination of a hidden window plus an execution-policy bypass on a
+  PowerShell invocation. Together they strongly indicate an attempt to run an
+  unsanctioned script without a visible UI, typical of loaders and droppers.
+references:
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1564/003/
+author: Nilesh Dhage
+date: 2026-07-16
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.defense_evasion
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_img:
+    Image|endswith:
+      - '\powershell.exe'
+      - '\pwsh.exe'
+  selection_hidden:
+    CommandLine|contains:
+      - '-w hidden'
+      - '-win hidden'
+      - '-windowstyle hidden'
+  selection_bypass:
+    CommandLine|contains:
+      - '-ep bypass'
+      - '-exec bypass'
+      - '-executionpolicy bypass'
+  condition: selection_img and selection_hidden and selection_bypass
+falsepositives:
+  - Vendor agents that launch hidden bypassed PowerShell. Allowlist by signed parent.
+level: high
